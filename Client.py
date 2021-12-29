@@ -1,7 +1,7 @@
 import socket
 import threading
 import struct
-import  msvcrt
+
 
 
 tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
