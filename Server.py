@@ -7,7 +7,7 @@ import select
 
 
 numClients=0
-clients=[]
+clients=[] # (connection , Team Name )  
 stop=False
 
 
@@ -28,7 +28,7 @@ def run_Server(server_port, broadcast_port):
     while True: 
         stop_broadcast = time.time() + 10
         while time.time() < stop_broadcast:
-            BroadCastSocket.sendto(message, ('<broadcast>', broadcast_port))
+            BroadCastSocket.sendto(message, ('<broadcast>', broadcast_port)) # invitaions send
             
             try:
               
@@ -60,7 +60,7 @@ def create_broadcast_socket():
 def clientConnected(sock):
     global clients
     
-    try:
+    try: ## GET CLIENT NAME 
         teamName=sock.recv(1024).decode('utf-8') 
         clients.append((sock,teamName))
 
@@ -83,15 +83,18 @@ def startGame():
     print("Clients In Game Mode")
     
     for i in clients:
-        i[0].send(b"Welcome to Quick Maths.")
+        i[0].send(b"Welcome to Quick Maths.\n Game will start after 10 seconds")
+
+    #time.sleep(10) # Wait 10 second until sending questions! TODO UNCOMMENT
     
   
-    player1=clients[0][0]
+    player1=clients[0][0] 
     player2=clients[1][0]
     
 
     msg="Player 1: "+clients[0][1]+"\nPlayer 2: "+clients[1][1]+"\n==\nPlease answer the following question as fast as you can:"
-    question="How Much is 2 + 2 ?"
+
+    question="How Much is 2 + 2 ?" ## GETRANDOMQUESTION()->(question,Answer)
 
     for i in clients:
         i[0].send(msg.encode("utf-8"))
@@ -109,10 +112,12 @@ def startGame():
         try:
             data = player1.recv(1024).decode('utf-8')  # receive response #leeeh?
             print("wow player 1  pressed !!! "+ data)
+            ## IF WIN SEND SOMETHING
+
             DrawFlag=False
 
         except ConnectionResetError:
-            print("Client Disconnected Game over ")
+            print("Player 1  Disconnected Game over ")
             break
         except: ## DIDNT ANSWER YET 
             pass
@@ -120,6 +125,8 @@ def startGame():
         try:
             data = player2.recv(1024).decode('utf-8')  # receive response
             print("wow player 2  pressed !!! "+ data)
+            ## IF WIN SEND SOMETHING
+
             DrawFlag=False
 
 
@@ -130,6 +137,7 @@ def startGame():
         except:## DIDNT ANSWER YET 
             pass
     
+    # NEED TO CHECK
     th1=threading.Thread(target=empty_socket,args=(player1,))
     th2=threading.Thread(target=empty_socket,args=(player2,)) 
 
@@ -138,6 +146,8 @@ def startGame():
 
     th1.join()
     th2.join()
+
+
 
     print("Game Ends , discoenneting Clients !")        
     if(DrawFlag):
