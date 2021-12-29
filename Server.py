@@ -22,7 +22,7 @@ def run_Server(server_port, broadcast_port):
     ServerSocket = socket.socket()  # get instance a
     ServerSocket.bind(("", server_port))  # bind host address and port together
     ServerSocket.setblocking(False)  # set socket to non-blocking mode
-    ServerSocket.listen(1)  # configure how many client the server can listen simultaneously
+    ServerSocket.listen(0)  # configure how many client the server can listen simultaneously
 
 
     while True: 
@@ -33,6 +33,10 @@ def run_Server(server_port, broadcast_port):
             try:
             
                 conn, address = ServerSocket.accept() # accept new connection
+                
+                if(address[0]!="172.18.0.118"):
+                    conn.close()
+                    continue
                 print("Connection from: " + str(address) )
     
                 global numClients
@@ -49,7 +53,7 @@ def run_Server(server_port, broadcast_port):
             except socket.error:    # for timeout exceptions since we call accept from a non-blocking socket
                 print(end='\r')
             time.sleep(1)
-       
+
 
 def create_broadcast_socket():
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)   # broadcast socket
@@ -179,7 +183,7 @@ def startGame():
     numClients=0
     clients=[]
     
- 
+
 
 def empty_socket(sock):
     ""

@@ -1,6 +1,8 @@
 import socket
 import threading
 import struct
+#import getch
+import msvcrt
 
 
 
@@ -19,8 +21,17 @@ def client_listen(broadcast_port):
         global tcp_socket
         tcp_socket = socket.socket()
         msg, addr = client.recvfrom(1024)
-        print("Received offer from "+addr[0]+",attempting to connect...")
-        invitation_port=struct.unpack('IBH',msg)
+        print("Received offer from "+addr[0]+",attempting to connect...") ## 
+
+        if(addr[0]!="172.18.0.118"):
+            continue
+        try:
+
+            invitation_port=struct.unpack('IBH',msg)
+        except:
+            print("Cant unpack MSG < WRONG FORMAT !!!!")
+            continue
+
         
         port=invitation_port[2] # socket server port number
         
