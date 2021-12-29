@@ -82,20 +82,30 @@ def startGame():
     global numClients
     global stop
     print("Clients In Game Mode")
- 
+    
     for i in clients:
-        i[0].send(b"Welcome To Game !!!")
+        i[0].send(b"Welcome to Quick Maths.")
     
   
     player1=clients[0][0]
     player2=clients[1][0]
+    
+
+    msg="Player 1: "+clients[0][1]+"\nPlayer 2: "+clients[1][1]+"\n==\nPlease answer the following question as fast as you can:"
+    question="How Much is 2 + 2 ?"
+
+    for i in clients:
+        i[0].send(msg.encode("utf-8"))
+    
 
        
+    for i in clients:
+        i[0].send(question.encode("utf-8"))
+    
 
-
-
-    stop =False
-    while(not stop):
+    TimeUp = time.time() + 10
+       
+    while(time.time()<TimeUp):
       
         try:
             data = player1.recv(1024).decode('utf-8')  # receive response #leeeh?
@@ -104,24 +114,24 @@ def startGame():
             print("Client Disconnected Game over ")
             break
         except:
-             pass
+            pass
 
         try:
-             data = player2.recv(1024).decode('utf-8')  # receive response
-             print("wow player 1  pressed !!! "+ data)
+            data = player2.recv(1024).decode('utf-8')  # receive response
+            print("wow player 2  pressed !!! "+ data)
 
         except ConnectionResetError:
             player1.close()
             print("Player 2 Disconnected Game over ")
             break
         except:
-             pass
+            pass
 
 
     
     print("Game Ends , discoenneting Clients !")
     for i in clients:
-        i.close()
+        i[0].close()
 
     numClients=0
     clients=[]
