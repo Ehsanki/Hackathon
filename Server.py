@@ -23,7 +23,7 @@ def run_Server(server_port, broadcast_port):
     ServerSocket = socket.socket()  # get instance a
     ServerSocket.bind(("", server_port))  # bind host address and port together
     ServerSocket.setblocking(False)  # set socket to non-blocking mode
-    ServerSocket.listen(5)  # configure how many client the server can listen simultaneously
+    ServerSocket.listen(0)  # configure how many client the server can listen simultaneously
 
    
     while True: 
@@ -34,19 +34,19 @@ def run_Server(server_port, broadcast_port):
             try:
               
                 conn, address = ServerSocket.accept() # accept new connection
-                clients.append(conn)
                 print("Connection from: " + str(address) )
     
                 global numClients
                 numClients+=1
-              
+
+                clientConnected(conn)
 
                 if(numClients==2):
                     startGame()
-                    print("all aggain")
+                    print("re Brodcasting invitations...")
+                    time.sleep(2)
                     
-                
-
+    
             except socket.error:    # for timeout exceptions since we call accept from a non-blocking socket
                 print(end='\r')
             time.sleep(1)
@@ -58,21 +58,37 @@ def create_broadcast_socket():
     udp_socket.settimeout(0.2)   # Set a timeout so the socket does not block indefinitely when trying to receive data.
     return udp_socket
 
+def clientConnected(sock):
+    global clients
+    
+    try:
+        teamName=sock.recv(1024).decode('utf-8') 
+        clients.append((sock,teamName))
+
+    except:
+        sock.send(b"Could Not receive Team Name")
+        clients.append((sock,"No Name"))
+    
+    global numClients
+
+    if(numClients==1):
+        sock.send(b"Waiting Second Player to join ...")
+
+    
 
 
 def startGame():
     global clients
     global numClients
     global stop
-    
-    print( Fore.GREEN+Style.BRIGHT+"Game Started"+Style.RESET_ALL)
+    print("Clients In Game Mode")
  
     for i in clients:
-        i.send(b"Welcome To Game !!!")
+        i[0].send(b"Welcome To Game !!!")
     
   
-    player1=clients[0]
-    player2=clients[1]
+    player1=clients[0][0]
+    player2=clients[1][0]
 
        
 

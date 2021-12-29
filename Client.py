@@ -14,11 +14,12 @@ def client_listen(broadcast_port):
     # Enable broadcasting mode
     client.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
     client.bind(("", broadcast_port))
+    print("Client started, listening for offer requests...")
     while True:
         global tcp_socket
         tcp_socket = socket.socket()
         msg, addr = client.recvfrom(1024)
-        print(msg)
+        print("Received offer from "+addr[0]+",attempting to connect...")
         invitation_port=struct.unpack('IBH',msg)
         
         port=invitation_port[2] # socket server port number
@@ -26,8 +27,7 @@ def client_listen(broadcast_port):
 
         hostIp = addr[0]  # (eth1, 172.1.0/24) is for development , (eth2, 172.99.0/24) is to test your work
 
-        msg ="Received offer from " +str(hostIp)
-        msg += (", attempting to connect..." )
+        
         
         client_connect(hostIp, port)
         print("\nServer disconnected, listening for offer requests...")
@@ -57,7 +57,7 @@ def client_connect(hostip, port):
 
 
 def clientGame():
-   
+    print("Successfully Connected")
     try:
         welcome_message = tcp_socket.recv(1024).decode()
         print(welcome_message)
@@ -69,7 +69,6 @@ def clientGame():
                 break
             print(data)
             
-
         
         tcp_socket.close()  # close the connection
     except socket.error as err:
@@ -93,5 +92,4 @@ def char_Answer(): ## Key Board Listener Thread -  to  catch user answer
 
 if __name__ == '__main__':
     broadcastPort = 13117
-    print("Client started, listening for offer requests...")
     client_listen(broadcastPort)
