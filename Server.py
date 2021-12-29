@@ -98,38 +98,47 @@ def startGame():
         i[0].send(msg.encode("utf-8"))
     
 
-       
-    for i in clients:
+    
+    for i in clients: ## Send Question To Clients 
         i[0].send(question.encode("utf-8"))
     
 
     TimeUp = time.time() + 10
-       
+    DrawFlag=True
     while(time.time()<TimeUp):
       
         try:
             data = player1.recv(1024).decode('utf-8')  # receive response #leeeh?
             print("wow player 1  pressed !!! "+ data)
+            DrawFlag=False
+
         except ConnectionResetError:
             print("Client Disconnected Game over ")
             break
-        except:
+        except: ## DIDNT ANSWER YET 
             pass
 
         try:
             data = player2.recv(1024).decode('utf-8')  # receive response
             print("wow player 2  pressed !!! "+ data)
+            DrawFlag=False
+
 
         except ConnectionResetError:
             player1.close()
             print("Player 2 Disconnected Game over ")
             break
-        except:
+        except:## DIDNT ANSWER YET 
             pass
 
+        
+    print("Game Ends , discoenneting Clients !")        
+    if(DrawFlag):
+        for i in clients:
+            i[0].send("Time's Up , DRAW !")
 
     
-    print("Game Ends , discoenneting Clients !")
+    
     for i in clients:
         i[0].close()
 
