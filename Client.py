@@ -23,8 +23,7 @@ def client_listen(broadcast_port):
         msg, addr = client.recvfrom(1024)
         print("Received offer from "+addr[0]+",attempting to connect...") ## 
 
-        if(addr[0]!="172.18.0.118"):
-            continue
+        
         try:
 
             invitation_port=struct.unpack('IBH',msg)
@@ -36,7 +35,7 @@ def client_listen(broadcast_port):
         port=invitation_port[2] # socket server port number
         
 
-        hostIp = addr[0]  # (eth1, 172.1.0/24) is for development , (eth2, 172.99.0/24) is to test your work
+        hostIp = addr[0]  
 
         
         
@@ -87,6 +86,7 @@ def clientGame():
         
         tcp_socket.close()
         return
+    
 
 def char_Answer(): ## Key Board Listener Thread -  to  catch user answer
     

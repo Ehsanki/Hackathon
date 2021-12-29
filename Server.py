@@ -5,11 +5,24 @@ import random
 import struct
 import select
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    RED='\033[31m'
+    GREEN='\033[32m'
+    redBack='\033[30;107m'
 
-numClients=0
+numClients=0 # Max 2 
 clients=[] # (connection , Team Name )  
 stop=False
-
+lock = threading.Lock()
 
 def sendto_pack_msg(port):
     type=0x2
@@ -31,26 +44,33 @@ def run_Server(server_port, broadcast_port):
             BroadCastSocket.sendto(message, ('<broadcast>', broadcast_port)) # invitaions send
             
             try:
-            
+
                 conn, address = ServerSocket.accept() # accept new connection
                 
-                if(address[0]!="172.18.0.118"):
-                    conn.close()
-                    continue
+
                 print("Connection from: " + str(address) )
     
                 global numClients
                 numClients+=1
-
+                lock.acquire()
                 clientConnected(conn)
-
+                lock.release()
                 if(numClients==2):
                     startGame()
-                    print("re Brodcasting invitations...")
-                    time.sleep(2)
+                    print("REBRODCAST ? [y\\n]")
+                    x=input()
+                    if(x=="n"):
+                        print(bcolors.WARNING+"Server Terminated Successfully "+bcolors.ENDC)
+                        ServerSocket.close()
+                        exit(0)
+                    print(bcolors.OKBLUE+"re Brodcasting invitations..."+bcolors.ENDC)
+                  
+                    time.sleep(5)
                     
     
-            except socket.error:    # for timeout exceptions since we call accept from a non-blocking socket
+            except socket.error: 
+                
+                   # for timeout exceptions since we call accept from a non-blocking socket
                 print(end='\r')
             time.sleep(1)
 
@@ -78,18 +98,37 @@ def clientConnected(sock):
         sock.send(b"Waiting Second Player to join ...")
 
     
+def generateQuestion():
+    
+    option=random.randint(0,1)
+
+    if(option==1): ##SUBSTRACT QUESTION
+        
+        fNum=random.randint(0,9999)
+        answer=random.randint(0,9)
+        question="How Much is "+str(fNum)+" - "+str(fNum-answer)
+        return question,answer
+
+
+    else: 
+        fNum=random.randint(0,5)
+        sNum=random.randint(0,4)
+        question="How Much is "+str(fNum)+" + "+str(sNum)
+        return question,fNum+sNum
 
 
 def startGame():
     global clients
     global numClients
     global stop
-    print("Clients In Game Mode")
+    print(bcolors.WARNING+"Clients In Game Mode"+bcolors.ENDC)
     
     for i in clients:
         i[0].send(b"Welcome to Quick Maths.\n Game will start after 10 seconds")
+       
 
-    #time.sleep(10) # Wait 10 second until sending questions! TODO UNCOMMENT
+
+    time.sleep(10) # Wait 10 second until sending questions! TODO UNCOMMENT
     
   
     player1=clients[0][0] 
@@ -98,30 +137,37 @@ def startGame():
 
     msg="Player 1: "+clients[0][1]+"\nPlayer 2: "+clients[1][1]+"\n==\nPlease answer the following question as fast as you can:"
 
-    question="How Much is 2 + 2 ?" ## GETRANDOMQUESTION()->(question,Answer)
+    question,answer=generateQuestion() ## GETRANDOMQUESTION()->(question,Answer)
 
     for i in clients:
         i[0].send(msg.encode("utf-8"))
+       
     
 
     
     for i in clients: ## Send Question To Clients 
         i[0].send(question.encode("utf-8"))
     
+    print(bcolors.GREEN+"Question sent -> "+bcolors.ENDC+question)
+    print("answer is ---> "+str(answer))
 
-    TimeUp = time.time() + 10
+
+    TimeUp = time.time() + 60
     DrawFlag=True
     while(time.time()<TimeUp):
       
         try:
-            data = player1.recv(1024).decode('utf-8')  # receive response #leeeh?
-            if data=="4":
-                player1.send(b"CONGRATS CHAPMION YOU HAVE WON!!!!!!!!!")
-                player2.send(b"BETTER LUCK NEXT TIME TIME YOU HAVE LOST LOSER ! ")
-            ## IF WIN SEND SOMETHING
+            data = player1.recv(1024).decode('utf-8')  # receive response 
+            print("player 1 Answered !!! "+str(data))
 
-            DrawFlag=False
-            break
+            if data==str(answer):
+                WonLostMsgSend(player1,player2)
+            else:
+                WonLostMsgSend(player2,player1)
+
+
+            return
+            
 
         except ConnectionResetError:
             print("Player 1  Disconnected Game over ")
@@ -134,19 +180,19 @@ def startGame():
 
         try:
             data = player2.recv(1024).decode('utf-8')  # receive response
-            print("wow player 2  pressed !!! "+ data)
-            ## IF WIN SEND SOMETHING
-            if data=="4":
-                player2.send(b"CONGRATS CHAPMION YOU HAVE WON!!!!!!!!!")
-                player1.send(b"BETTER LUCK NEXT TIME TIME YOU HAVE LOST LOSER ! ")
-            DrawFlag=False
-            break
+            
+            
+            if data==str(answer):
+                WonLostMsgSend(player2,player1)
+            else:
+                WonLostMsgSend(player1,player2)
 
-
+            return
+            
         except ConnectionResetError:
             player1.close()
             print("Player 2  Disconnected Game over ")
-            player2.close()
+            
             numClients=0
             clients=[]
             return
@@ -156,24 +202,13 @@ def startGame():
         except:## DIDNT ANSWER YET 
             pass
     
-    # NEED TO CHECK
-    """
-    th1=threading.Thread(target=empty_socket,args=(player1,))
-    th2=threading.Thread(target=empty_socket,args=(player2,)) 
-
-    th1.start()
-    th2.start()
-
-    th1.join()
-    th2.join()
-    """
-
-
+  
 
     print("Game Ends , discoenneting Clients !")        
     if(DrawFlag):
+        drawMsg=bcolors.WARNING+"Time's Up , DRAW !"+bcolors.ENDC
         for i in clients:
-            i[0].send(b"Time's Up , DRAW !")
+            i[0].send(drawMsg.encode())
 
     
     
@@ -184,16 +219,22 @@ def startGame():
     clients=[]
     
 
+def WonLostMsgSend(playerWon,playerLost):
+    wonMsg="CONGRATS CHAPMION YOU"+bcolors.GREEN+bcolors.BOLD+" WON !!!!!!\n"+bcolors.ENDC
+    lostMsg="BETTER LUCK NEXT TIME TIME YOU HAVE"+bcolors.RED +bcolors.BOLD+  " Lost!\n "+bcolors.ENDC
 
-def empty_socket(sock):
-    ""
-    "remove the data present on the socket"
-    ""
-    while True:
-        try :
-            sock.recv(1024)
-        except :
-            break
+    playerLost.send(lostMsg.encode())
+    playerWon.send(wonMsg.encode())
+    playerWon.close()
+    playerLost.close()
+
+    global numClients
+    global clients
+    numClients=0
+    clients=[]
+
+
+
 
 
 if __name__ == '__main__':
@@ -201,7 +242,8 @@ if __name__ == '__main__':
     broadcastPort = 13117  # this should be the port in the end when we test it
     msg ="Server started,listening on IP address : " 
     msg +=socket.gethostbyname(socket.gethostname())
-    print(msg)
+    print(bcolors.redBack+bcolors.BOLD +msg+bcolors.ENDC)
+ 
     run_Server(serverPort, broadcastPort)
 
 
