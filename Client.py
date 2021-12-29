@@ -18,14 +18,14 @@ def client_listen(broadcast_port):
         global tcp_socket
         tcp_socket = socket.socket()
         msg, addr = client.recvfrom(1024)
-        invitation_port=struct.unpack('!IBH',msg)
+        print(msg)
+        invitation_port=struct.unpack('IBH',msg)
         
         port=invitation_port[2] # socket server port number
         
 
         hostIp = addr[0]  # (eth1, 172.1.0/24) is for development , (eth2, 172.99.0/24) is to test your work
 
-        print(addr)
         msg ="Received offer from " +str(hostIp)
         msg += (", attempting to connect..." )
         

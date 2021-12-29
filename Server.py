@@ -13,8 +13,8 @@ stop=False
 
 
 def sendto_pack_msg(port):
-    type=0x02
-    broadsocketMessage=struct.pack('!IBH',0xabcddcba,type,port)
+    type=0x2
+    broadsocketMessage=struct.pack('IBH',0xabcddcba,type,port)
     return broadsocketMessage
 
 def run_Server(server_port, broadcast_port):
