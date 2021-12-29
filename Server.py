@@ -26,6 +26,7 @@ numClients=0 # Max 2
 clients=[] # (connection , Team Name )  
 stop=False
 lock = threading.Lock()
+Host="172.18.0."
 
 def sendto_pack_msg(port):
     type=0x2
@@ -34,7 +35,7 @@ def sendto_pack_msg(port):
 
 def run_Server(server_port, broadcast_port):
     BroadCastSocket = create_broadcast_socket()
-    message = sendto_pack_msg(4999)
+    message = sendto_pack_msg(server_port)
     ServerSocket = socket.socket()  # get instance a
     ServerSocket.bind(("", server_port))  # bind host address and port together
     ServerSocket.setblocking(False)  # set socket to non-blocking mode
