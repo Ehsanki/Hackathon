@@ -3,8 +3,7 @@ import threading
 import time
 import random
 import struct
-from colorama import Fore, Back, Style
-
+import select
 
 
 numClients=0
@@ -130,8 +129,16 @@ def startGame():
             break
         except:## DIDNT ANSWER YET 
             pass
+    
+    th1=threading.Thread(target=empty_socket,args=(player1,))
+    th2=threading.Thread(target=empty_socket,args=(player2,)) 
 
-        
+    th1.start()
+    th2.start()
+
+    th1.join()
+    th2.join()
+
     print("Game Ends , discoenneting Clients !")        
     if(DrawFlag):
         for i in clients:
@@ -147,7 +154,15 @@ def startGame():
     
  
 
-    
+def empty_socket(sock):
+    ""
+    "remove the data present on the socket"
+    ""
+    while True:
+        try :
+            sock.recv(1024)
+        except :
+            break
 
 
 if __name__ == '__main__':
