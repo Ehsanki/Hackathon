@@ -5,7 +5,7 @@ import  msvcrt
 
 
 tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-team_name = "Samolir\n"
+team_name = "HOLA AMIGOS\n"
 
 
 def client_listen(broadcast_port):
