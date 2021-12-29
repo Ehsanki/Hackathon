@@ -1,13 +1,13 @@
 import socket
 import threading
 import struct
-#import getch
-import msvcrt
+import getch
+#import msvcrt
 
 
 
 tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-team_name = "HOLA AMIGOS\n"
+team_name = "Tigers\n"
 
 
 def client_listen(broadcast_port):
@@ -90,9 +90,11 @@ def clientGame():
 
 def char_Answer(): ## Key Board Listener Thread -  to  catch user answer
     
-    answer=msvcrt.getch()
+    """
+    answer=msvcrt.getch()          ## WINDOWS
     answer=answer.decode('utf-8')
-    
+    """
+    answer=getch.getch()   # Linux 
     tcp_socket.send(answer.encode())
   
     answer=None

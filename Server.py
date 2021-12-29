@@ -6,6 +6,8 @@ import struct
 import select
 
 class bcolors:
+    BLUE='\033[34m'
+    bGreen='\033[93m'
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
     OKCYAN = '\033[96m'
@@ -18,6 +20,7 @@ class bcolors:
     RED='\033[31m'
     GREEN='\033[32m'
     redBack='\033[30;107m'
+    backGroundRed='\033[41m'
 
 numClients=0 # Max 2 
 clients=[] # (connection , Team Name )  
@@ -57,7 +60,7 @@ def run_Server(server_port, broadcast_port):
                 lock.release()
                 if(numClients==2):
                     startGame()
-                    print("REBRODCAST ? [y\\n]")
+                    print("REBRODCAST ? [ y \\ n ]")
                     x=input()
                     if(x=="n"):
                         print(bcolors.WARNING+"Server Terminated Successfully "+bcolors.ENDC)
@@ -89,18 +92,19 @@ def clientConnected(sock):
         clients.append((sock,teamName))
 
     except:
-        sock.send(b"Could Not receive Team Name")
+        sock.send(str(bcolors.RED+"Could Not receive Team Name"+bcolors.ENDC).encode())
         clients.append((sock,"No Name"))
     
     global numClients
 
     if(numClients==1):
-        sock.send(b"Waiting Second Player to join ...")
+        m=bcolors.WARNING+"Waiting Second Player to join ..."+bcolors.ENDC
+        sock.send(m.encode())
 
     
 def generateQuestion():
     
-    option=random.randint(0,1)
+    option=random.randint(0,2)
 
     if(option==1): ##SUBSTRACT QUESTION
         
@@ -110,11 +114,13 @@ def generateQuestion():
         return question,answer
 
 
-    else: 
+    elif(option==0): 
         fNum=random.randint(0,5)
         sNum=random.randint(0,4)
         question="How Much is "+str(fNum)+" + "+str(sNum)
         return question,fNum+sNum
+    else:
+        return "What is The Average of ( 3 , 6 , 12 )",7
 
 
 def startGame():
@@ -123,8 +129,10 @@ def startGame():
     global stop
     print(bcolors.WARNING+"Clients In Game Mode"+bcolors.ENDC)
     
+    welcomeM=bcolors.BOLD+bcolors.HEADER+bcolors.GREEN+"Welcome to Quick Maths."+\
+        bcolors.ENDC+bcolors.backGroundRed+"\nGame will start after 10 seconds"+bcolors.ENDC
     for i in clients:
-        i[0].send(b"Welcome to Quick Maths.\n Game will start after 10 seconds")
+        i[0].send(welcomeM.encode())
        
 
 
@@ -135,7 +143,8 @@ def startGame():
     player2=clients[1][0]
     
 
-    msg="Player 1: "+clients[0][1]+"\nPlayer 2: "+clients[1][1]+"\n==\nPlease answer the following question as fast as you can:"
+    msg=bcolors.BOLD+"Player 1: "+bcolors.BLUE+clients[0][1]+bcolors.ENDC+bcolors.BOLD\
+        +"\nPlayer 2: "+bcolors.bGreen+clients[1][1]+bcolors.GREEN+"\n==\nPlease answer the following question as fast as you can:"+bcolors.ENDC
 
     question,answer=generateQuestion() ## GETRANDOMQUESTION()->(question,Answer)
 
@@ -148,17 +157,17 @@ def startGame():
     for i in clients: ## Send Question To Clients 
         i[0].send(question.encode("utf-8"))
     
-    print(bcolors.GREEN+"Question sent -> "+bcolors.ENDC+question)
-    print("answer is ---> "+str(answer))
+    print(bcolors.GREEN+"Question sent -> "+bcolors.ENDC+question +bcolors.GREEN+ "Expected answer : "+bcolors.ENDC+ str(answer) )
+    
 
 
-    TimeUp = time.time() + 60
+    TimeUp = time.time() + 10
     DrawFlag=True
     while(time.time()<TimeUp):
       
         try:
             data = player1.recv(1024).decode('utf-8')  # receive response 
-            print("player 1 Answered !!! "+str(data))
+            
 
             if data==str(answer):
                 WonLostMsgSend(player1,player2)
@@ -227,6 +236,7 @@ def WonLostMsgSend(playerWon,playerLost):
     playerWon.send(wonMsg.encode())
     playerWon.close()
     playerLost.close()
+
 
     global numClients
     global clients
