@@ -135,7 +135,7 @@ def startGame():
     print("Game Ends , discoenneting Clients !")        
     if(DrawFlag):
         for i in clients:
-            i[0].send("Time's Up , DRAW !")
+            i[0].send(b"Time's Up , DRAW !")
 
     
     
